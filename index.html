@@ -2,22 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1a56db" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0E2A3B" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <title>Dutybook</title>
+  <title>Dutybook Marketplace</title>
 </head>
 <body>
   <div id="app">
     <!-- Login screen -->
     <div id="screen-login" class="screen">
+      <header>
+        <div class="brand"><div class="mark" aria-hidden="true"></div><h1>Dutybook <span>Marketplace</span></h1></div>
+        <p class="header-sub">Clifton Lifesaving Club</p>
+      </header>
       <div class="login-box">
-        <h1>Dutybook</h1>
-        <p>Clifton duty swops</p>
+        <h2>Sign in</h2>
+        <p>We'll email you a magic link. No password needed.</p>
         <form id="login-form">
           <input type="email" id="login-email" placeholder="Your email" required autocomplete="email" />
-          <button type="submit">Send magic link</button>
+          <button type="submit" class="btn-primary">Send magic link</button>
         </form>
         <p id="login-msg" class="msg" hidden></p>
       </div>
@@ -25,14 +29,22 @@
 
     <!-- Join screen (from invite) -->
     <div id="screen-join" class="screen" hidden>
+      <header>
+        <div class="brand"><div class="mark" aria-hidden="true"></div><h1>Dutybook <span>Marketplace</span></h1></div>
+        <p class="header-sub">Clifton Lifesaving Club</p>
+      </header>
       <div class="join-box">
-        <h1>Join the club</h1>
+        <h2 class="section-title">Join your club</h2>
+        <p class="lede">Your tags tell others what you're qualified for. Nobody checks them in the app, so keep them honest and current.</p>
         <form id="join-form">
-          <input type="text" id="join-name" placeholder="Your full name" required />
+          <div class="field">
+            <label for="join-name">Full name</label>
+            <input type="text" id="join-name" placeholder="Your full name" required autocomplete="name" />
+          </div>
           <fieldset id="join-tags">
             <legend>Your qualifications</legend>
           </fieldset>
-          <button type="submit">Join</button>
+          <button type="submit" class="btn-primary btn-wide">Join club</button>
         </form>
         <p id="join-msg" class="msg" hidden></p>
       </div>
@@ -40,59 +52,65 @@
 
     <!-- Main app -->
     <div id="screen-app" class="screen" hidden>
-      <nav id="tabs">
-        <button data-tab="open" class="active">Open days</button>
-        <button data-tab="post">Post</button>
-        <button data-tab="myswops">My swops <span id="notif-badge" class="badge" hidden></span></button>
-        <button data-tab="history">History</button>
-        <button data-tab="invite" id="tab-btn-invite" hidden>Invite</button>
-      </nav>
+      <header>
+        <div class="brand"><div class="mark" aria-hidden="true"></div><h1>Dutybook <span>Marketplace</span></h1></div>
+        <p class="header-sub">Clifton Lifesaving Club</p>
+      </header>
 
       <main>
         <section id="tab-open" class="tab-content">
-          <h2>Open days</h2>
+          <h2 class="section-title">Open days</h2>
+          <p class="lede">Soonest first. Tags show what the person going off duty is qualified for.</p>
           <div id="open-list" class="card-list"></div>
-          <p id="open-empty" class="empty" hidden>No open days right now.</p>
+          <div id="open-empty" class="empty" hidden>No open days right now. If you can't make a duty, post it.</div>
         </section>
 
         <section id="tab-post" class="tab-content" hidden>
-          <h2>Post a day</h2>
-          <form id="post-form">
-            <label>Date <input type="date" id="post-date" required /></label>
-            <label>
-              <select id="post-mode">
-                <option value="give">Give away</option>
-                <option value="trade">Trade</option>
-              </select>
-            </label>
-            <button type="submit">Post</button>
+          <h2 class="section-title">Post a day</h2>
+          <p class="lede">Can't make a duty? Put it up. Nothing changes until you accept an offer.</p>
+          <form id="post-form" class="card" novalidate>
+            <div class="field">
+              <label for="post-date">Duty date</label>
+              <input type="date" id="post-date" required />
+            </div>
+            <div class="field">
+              <span style="display:block;font-size:14px;font-weight:500;margin-bottom:4px">What do you want?</span>
+              <div class="radio-row">
+                <label><input type="radio" name="post-mode" value="give" checked />Give it away</label>
+                <label><input type="radio" name="post-mode" value="trade" />A day back</label>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary btn-wide">Post this day</button>
           </form>
           <p id="post-msg" class="msg" hidden></p>
         </section>
 
         <section id="tab-myswops" class="tab-content" hidden>
-          <h2>My swops</h2>
           <div id="my-notifications" class="notif-list"></div>
-          <h3>Active swops</h3>
+          <h2 class="section-title">Confirmed swops</h2>
           <div id="my-swops-list" class="card-list"></div>
-          <h3>My open posts</h3>
+          <h2 class="section-title">Your open days</h2>
           <div id="my-posts-list" class="card-list"></div>
         </section>
 
         <section id="tab-history" class="tab-content" hidden>
-          <h2>History</h2>
-          <div id="history-list" class="event-list"></div>
-          <button id="history-more" hidden>Load more</button>
+          <h2 class="section-title">History</h2>
+          <p class="lede">Every post, offer, swop and cancellation, newest first.</p>
+          <ul id="history-list" class="event-list"></ul>
+          <button id="history-more" class="btn-ghost btn-wide" hidden style="margin-top:12px">Load more</button>
         </section>
 
         <section id="tab-invite" class="tab-content" hidden>
-          <h2>Invite a member</h2>
-          <form id="invite-form">
-            <input type="email" id="invite-email" placeholder="Email address" required />
-            <button type="submit">Send invite</button>
+          <h2 class="section-title">Invite a member</h2>
+          <form id="invite-form" class="card" novalidate>
+            <div class="field">
+              <label for="invite-email">Email address</label>
+              <input type="email" id="invite-email" placeholder="name@example.com" required />
+            </div>
+            <button type="submit" class="btn-primary btn-wide">Send invite</button>
           </form>
           <p id="invite-msg" class="msg" hidden></p>
-          <h3>Invites sent</h3>
+          <h2 class="section-title" style="margin-top:24px">Invites sent</h2>
           <div id="invite-list"></div>
         </section>
       </main>
@@ -100,6 +118,14 @@
       <footer>
         <button id="logout-btn">Log out</button>
       </footer>
+
+      <nav id="tabs">
+        <button data-tab="open" class="active">Open days</button>
+        <button data-tab="post">Post</button>
+        <button data-tab="myswops">My swops <span id="notif-badge" class="badge" hidden></span></button>
+        <button data-tab="history">History</button>
+        <button data-tab="invite" id="tab-btn-invite" hidden>Invite</button>
+      </nav>
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>

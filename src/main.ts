@@ -7,6 +7,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!
 const show = (el: HTMLElement) => el.removeAttribute('hidden')
 const hide = (el: HTMLElement) => el.setAttribute('hidden', '')
+const esc = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
 const showMsg = (el: HTMLElement, text: string, cls: 'success' | 'error' = 'success') => {
   el.textContent = text
   el.className = `msg ${cls}`
@@ -21,12 +22,21 @@ let channel: RealtimeChannel | null = null
 let historyOffset = 0
 
 // ── Date formatting ──
-const fmtDate = (d: string) => {
-  const dt = new Date(d + 'T00:00:00')
-  return dt.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
-}
-const fmtTime = (d: string) => new Date(d).toLocaleString('en-ZA', { dateStyle: 'short', timeStyle: 'short' })
+const d = (s: string) => new Date(s + 'T00:00:00')
+const fmtDate = (s: string) => d(s).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
+const fmtMon = (s: string) => d(s).toLocaleDateString('en-ZA', { month: 'short' })
+const fmtDay = (s: string) => d(s).getDate()
+const fmtTime = (ts: string) => new Date(ts).toLocaleString('en-ZA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 const today = () => new Date().toISOString().slice(0, 10)
+
+function dateFlag(date: string) {
+  return `<div class="flag" aria-hidden="true"><span class="mo">${fmtMon(date)}</span><span class="dn">${fmtDay(date)}</span></div>`
+}
+
+function tagsHtml(tags: { name: string }[]) {
+  if (!tags?.length) return ''
+  return `<div class="card-tags">${tags.map(t => `<span class="tag">${esc(t.name)}</span>`).join('')}</div>`
+}
 
 // ── Boot ──
 async function boot() {
@@ -53,7 +63,10 @@ async function loadMember() {
   if (member) {
     currentMember = member
     clubId = member.club_id
-    if (member.role === 'club_admin') show($('#tab-btn-invite'))
+    if (member.role === 'club_admin') {
+      show($('#tab-btn-invite'))
+      $('#tabs').classList.add('has-invite')
+    }
     showScreen('app')
     switchTab('open')
   } else {
@@ -85,7 +98,6 @@ $('#login-form').addEventListener('submit', async (e) => {
 
 // ── Join ──
 async function loadJoinTags() {
-  // Fetch all tags for Clifton (the only club)
   const { data: tags } = await supabase.from('tags').select('*').order('name')
   const container = $('#join-tags')
   if (!tags?.length) return
@@ -93,7 +105,7 @@ async function loadJoinTags() {
   group.className = 'checkbox-group'
   for (const t of tags) {
     const label = document.createElement('label')
-    label.innerHTML = `<input type="checkbox" name="tags" value="${t.id}" /> ${t.name}`
+    label.innerHTML = `<input type="checkbox" name="tags" value="${t.id}" /> ${esc(t.name)}`
     group.appendChild(label)
   }
   container.appendChild(group)
@@ -144,7 +156,7 @@ function subscribe() {
       if (activeTab === 'open') loadOpenDays()
       if (activeTab === 'myswops') loadMySwops()
     })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'offers', filter: `post_id=in.(select id from posts where club_id='${clubId}')` }, () => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, () => {
       if (activeTab === 'open') loadOpenDays()
       if (activeTab === 'myswops') loadMySwops()
     })
@@ -184,7 +196,6 @@ async function loadOpenDays() {
   }
   hide(empty)
 
-  // Fetch givers and offers
   const giverIds = [...new Set(posts.map(p => p.giver_id))]
   const { data: givers } = await supabase.from('member_public').select('*').in('id', giverIds)
   const giverMap = new Map((givers || []).map(g => [g.id, g as MemberPublic]))
@@ -207,53 +218,81 @@ async function loadOpenDays() {
     const postOffers = offersByPost.get(p.id) || []
     const myOffer = postOffers.find(o => o.from_id === currentMember?.id)
     const isMine = p.giver_id === currentMember?.id
+    const modeLabel = p.mode === 'trade' ? 'Wants a day back' : 'Giving away'
+    const modeClass = p.mode === 'trade' ? ' trade' : ''
 
-    return `<div class="card">
-      <div class="card-date">${fmtDate(p.duty_date)}</div>
-      <div class="card-meta">${giver?.full_name || 'Unknown'} · ${p.mode === 'give' ? 'Giving away' : 'Wants to trade'}</div>
-      ${giver?.tags?.length ? `<div class="card-tags">${(giver.tags as { name: string }[]).map(t => `<span class="tag">${t.name}</span>`).join('')}</div>` : ''}
-      ${postOffers.length ? `<div class="card-meta">${postOffers.length} offer${postOffers.length > 1 ? 's' : ''}</div>` : ''}
-      <div class="card-actions">
-        ${isMine ? `<button class="small secondary" onclick="window._removePost('${p.id}')">Remove</button>`
-          : myOffer ? `<button class="small secondary" onclick="window._withdrawOffer('${myOffer.id}')">Withdraw offer</button>`
-          : `<button class="small" onclick="window._showOfferForm('${p.id}', '${p.mode}')">Make offer</button>`}
+    let actions = ''
+    if (isMine) {
+      actions = `<div class="card-actions">
+        <button class="btn-link small" onclick="window._removePost('${p.id}')">Take down this post</button>
+      </div>`
+    } else if (myOffer) {
+      actions = `<div class="card-actions">
+        <span style="color:var(--ok);font-weight:600;font-size:14px">Offer sent</span>
+        <button class="btn-link small" onclick="window._withdrawOffer('${myOffer.id}')">Withdraw</button>
+      </div>`
+    } else if (p.mode === 'give') {
+      actions = `<div class="card-actions">
+        <button class="btn-primary small" onclick="window._takeDay('${p.id}')">Take this day</button>
+      </div>`
+    } else {
+      actions = `<div class="card-actions">
+        <button class="btn-primary small" onclick="window._showOfferForm('${p.id}')">Offer a day back</button>
+      </div>`
+    }
+
+    return `<article class="card">
+      <div class="day-card">
+        ${dateFlag(p.duty_date)}
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+            <span class="card-date">${fmtDate(p.duty_date)}</span>
+            <span class="card-meta${modeClass}" style="margin:0;white-space:nowrap">${modeLabel}</span>
+          </div>
+          <div style="margin-top:8px;font-size:15px">${esc(giver?.full_name || 'Unknown')}${isMine ? '<span class="mine-pill">Yours</span>' : ''}</div>
+          ${tagsHtml(giver?.tags as { name: string }[] || [])}
+          ${actions}
+        </div>
       </div>
       <div id="offer-form-${p.id}"></div>
-    </div>`
+    </article>`
   }).join('')
 }
 
-// ── Offer actions (on window for inline onclick) ──
-;(window as any)._showOfferForm = (postId: string, mode: string) => {
-  const container = $(`#offer-form-${postId}`)
-  container.innerHTML = `<form class="offer-form" onsubmit="window._submitOffer(event, '${postId}')">
-    <select name="kind">
-      <option value="take">Take it</option>
-      ${mode === 'trade' ? '<option value="trade">Trade</option>' : ''}
-    </select>
-    <input type="date" name="trade_date" hidden />
-    <button type="submit" class="small">Send</button>
-  </form>`
-  const select = container.querySelector('select')!
-  const dateInput = container.querySelector('input[name="trade_date"]') as HTMLInputElement
-  select.addEventListener('change', () => {
-    if (select.value === 'trade') { show(dateInput); dateInput.required = true }
-    else { hide(dateInput); dateInput.required = false }
-  })
-}
-
-;(window as any)._submitOffer = async (e: Event, postId: string) => {
-  e.preventDefault()
-  const form = e.target as HTMLFormElement
-  const kind = (form.querySelector('select') as HTMLSelectElement).value
-  const tradeDate = (form.querySelector('input[name="trade_date"]') as HTMLInputElement).value || null
+// ── Offer actions ──
+;(window as any)._takeDay = async (postId: string) => {
   const { error } = await supabase.from('offers').insert({
     post_id: postId,
     from_id: currentMember!.id,
-    kind,
+    kind: 'take'
+  })
+  if (error) alert(error.message)
+  else loadOpenDays()
+}
+
+;(window as any)._showOfferForm = (postId: string) => {
+  const container = $(`#offer-form-${postId}`)
+  container.innerHTML = `<form class="offer-form" onsubmit="window._submitTradeOffer(event, '${postId}')">
+    <strong style="display:block;margin-bottom:8px">Which day can you give back?</strong>
+    <div class="field"><label>Your duty date</label><input type="date" name="trade_date" min="${today()}" required /></div>
+    <div class="row">
+      <button type="submit" class="btn-primary small">Send trade offer</button>
+      <button type="button" class="btn-ghost small" onclick="this.closest('.offer-form').remove()">Cancel</button>
+    </div>
+  </form>`
+}
+
+;(window as any)._submitTradeOffer = async (e: Event, postId: string) => {
+  e.preventDefault()
+  const form = e.target as HTMLFormElement
+  const tradeDate = (form.querySelector('input[name="trade_date"]') as HTMLInputElement).value
+  const { error } = await supabase.from('offers').insert({
+    post_id: postId,
+    from_id: currentMember!.id,
+    kind: 'trade',
     trade_date: tradeDate
   })
-  if (error) alert(error.message === '23505' ? 'You already have a pending offer on this day.' : error.message)
+  if (error) alert(error.message)
   else loadOpenDays()
 }
 
@@ -271,8 +310,13 @@ async function loadOpenDays() {
 $('#post-form').addEventListener('submit', async (e) => {
   e.preventDefault()
   const date = ($('#post-date') as HTMLInputElement).value
-  const mode = ($('#post-mode') as HTMLSelectElement).value
+  const modeEl = document.querySelector<HTMLInputElement>('input[name="post-mode"]:checked')
+  const mode = modeEl?.value || 'give'
   const msg = $('#post-msg')
+
+  if (!date) { showMsg(msg, 'Pick the date of your duty.', 'error'); return }
+  if (date < today()) { showMsg(msg, 'That date has passed. Pick an upcoming duty day.', 'error'); return }
+
   const { error } = await supabase.from('posts').insert({
     club_id: clubId!,
     giver_id: currentMember!.id,
@@ -285,12 +329,12 @@ $('#post-form').addEventListener('submit', async (e) => {
       : error.message
     showMsg(msg, text, 'error')
   } else {
-    showMsg(msg, 'Posted!', 'success')
+    showMsg(msg, 'Day posted. It\'s on Open days now.', 'success')
     ;($('#post-form') as HTMLFormElement).reset()
+    setTimeout(() => switchTab('open'), 800)
   }
 })
 
-// Set min date to today
 ;($('#post-date') as HTMLInputElement).min = today()
 
 // ── My swops ──
@@ -312,10 +356,9 @@ async function loadNotifications() {
 
   container.innerHTML = notifs.map(n => {
     const cls = n.read_at ? 'notif read' : 'notif'
-    return `<div class="${cls}" data-id="${n.id}">${n.body} <small>${fmtTime(n.created_at)}</small></div>`
+    return `<div class="${cls}">${esc(n.body)}<time>${fmtTime(n.created_at)}</time></div>`
   }).join('')
 
-  // Mark unread as read
   const unread = notifs.filter(n => !n.read_at).map(n => n.id)
   if (unread.length) {
     await supabase.from('notifications').update({ read_at: new Date().toISOString() }).in('id', unread)
@@ -348,35 +391,55 @@ async function loadActiveSwops() {
     .order('confirmed_at', { ascending: false })
 
   const list = $('#my-swops-list')
-  if (!swops?.length) { list.innerHTML = '<p class="empty">No active swops.</p>'; return }
+  if (!swops?.length) { list.innerHTML = '<div class="empty">No confirmed swops yet.</div>'; return }
 
-  // Fetch names
   const ids = [...new Set(swops.flatMap(s => [s.giver_id, s.taker_id]))]
   const { data: members } = await supabase.from('member_public').select('*').in('id', ids)
   const nameMap = new Map((members || []).map(m => [m.id, m.full_name]))
 
   list.innerHTML = swops.map(s => {
     const isGiver = s.giver_id === currentMember!.id
-    const otherName = nameMap.get(isGiver ? s.taker_id : s.giver_id) || 'Unknown'
+    const otherName = esc(nameMap.get(isGiver ? s.taker_id : s.giver_id) || 'Unknown')
+    const giverName = esc(nameMap.get(s.giver_id) || 'Unknown')
     const post = s.post as Post
-    return `<div class="card swop-detail">
-      <div class="card-date">${fmtDate(post.duty_date)}</div>
-      <div class="card-meta">${isGiver ? `${otherName} is covering` : `You're covering for ${nameMap.get(s.giver_id)}`}</div>
-      ${s.trade_date ? `<div class="card-meta">Trade date: ${fmtDate(s.trade_date)}</div>` : ''}
-      ${s.captain_told_at ? '<div class="told">Captain told</div>' : ''}
-      <div class="card-actions">
-        ${!s.captain_told_at && isGiver ? `<button class="small secondary" onclick="window._tellCaptain('${s.id}', '${post.duty_date}', '${otherName}')">Tell captain via WhatsApp</button>` : ''}
-        ${isGiver ? `<button class="small" onclick="window._markTold('${s.id}')">Mark captain told</button>` : ''}
-        <button class="small danger" onclick="window._cancelSwop('${s.id}')">Cancel swop</button>
-        <button class="small secondary" onclick="window._getContact('${s.id}')">Get contact</button>
-      </div>
-    </div>`
-  }).join('')
-}
+    const line = isGiver ? `${otherName} is covering your shift.` : `You're covering ${giverName}'s shift.`
+    const status = s.captain_told_at
+      ? `<span class="status-ok">${isGiver ? 'Captain told' : otherName + ' told their captain'}</span>`
+      : `<span class="status-wait">${isGiver ? 'Captain not told yet' : otherName + ' still needs to tell their captain'}</span>`
 
-;(window as any)._tellCaptain = (_swopId: string, date: string, takerName: string) => {
-  const text = encodeURIComponent(`Hi Captain, I've swopped my duty on ${fmtDate(date)} with ${takerName} via Dutybook.`)
-  window.open(`https://wa.me/?text=${text}`, '_blank')
+    // Captain message for giver
+    const captainMsgText = `Swop confirmed: ${otherName} is covering my ${fmtDate(post.duty_date)} shift at Clifton.${s.trade_date ? ` In return I'm covering their ${fmtDate(s.trade_date)} shift.` : ''}\n– ${giverName}`
+    const waLink = `https://wa.me/?text=${encodeURIComponent(captainMsgText)}`
+
+    let captainCard = ''
+    if (isGiver && !s.captain_told_at) {
+      captainCard = `<div class="captain-card">
+        <h3>Tell your captain</h3>
+        <p>It was your duty, so this one's on you. Here's a message ready to go.</p>
+        <div class="captain-msg">${esc(captainMsgText)}</div>
+        <div class="card-actions">
+          <a class="btn-dark small" href="${waLink}" target="_blank" rel="noopener">Send on WhatsApp</a>
+          <button class="btn-link small" onclick="window._markTold('${s.id}')">I've told my captain</button>
+        </div>
+      </div>`
+    }
+
+    return `${captainCard}<article class="card">
+      <div class="day-card">
+        ${dateFlag(post.duty_date)}
+        <div>
+          <div class="card-date">${fmtDate(post.duty_date)}</div>
+          <div class="swop-detail">${line}</div>
+          ${s.trade_date ? `<div class="swop-detail">${isGiver ? 'You cover' : otherName + ' covers'} ${fmtDate(s.trade_date)} in return.</div>` : ''}
+          <div class="swop-detail">${status}</div>
+          <div class="card-actions">
+            <button class="btn-link small" onclick="window._cancelSwop('${s.id}')">Cancel swop</button>
+            <button class="btn-ghost small" onclick="window._getContact('${s.id}')">Get contact</button>
+          </div>
+        </div>
+      </div>
+    </article>`
+  }).join('')
 }
 
 ;(window as any)._markTold = async (swopId: string) => {
@@ -406,9 +469,8 @@ async function loadMyPosts() {
     .order('duty_date')
 
   const list = $('#my-posts-list')
-  if (!posts?.length) { list.innerHTML = '<p class="empty">No open posts.</p>'; return }
+  if (!posts?.length) { list.innerHTML = '<div class="empty">No open posts.</div>'; return }
 
-  // Fetch offers on my posts
   const postIds = posts.map(p => p.id)
   const { data: offers } = await supabase
     .from('offers')
@@ -429,33 +491,49 @@ async function loadMyPosts() {
 
   list.innerHTML = posts.map(p => {
     const postOffers = offersByPost.get(p.id) || []
-    return `<div class="card">
-      <div class="card-date">${fmtDate(p.duty_date)}</div>
-      <div class="card-meta">${p.mode === 'give' ? 'Giving away' : 'Trade'}</div>
-      ${postOffers.length ? postOffers.map(o => {
-        const offerer = offererMap.get(o.from_id)
-        return `<div class="offer-row">
-          <span>${offerer?.full_name || 'Unknown'} - ${o.kind}${o.trade_date ? ' (' + fmtDate(o.trade_date) + ')' : ''}</span>
-          ${offerer?.tags?.length ? `<span class="card-tags">${(offerer.tags as { name: string }[]).map(t => `<span class="tag">${t.name}</span>`).join('')}</span>` : ''}
-          <button class="small" onclick="window._acceptOffer('${o.id}')">Accept</button>
-        </div>`
-      }).join('') : '<div class="card-meta">No offers yet</div>'}
-      <div class="card-actions">
-        <button class="small secondary" onclick="window._removePost('${p.id}')">Remove post</button>
+    const modeLabel = p.mode === 'trade' ? 'Wants a day back' : 'Giving away'
+
+    return `<article class="card">
+      <div class="day-card">
+        ${dateFlag(p.duty_date)}
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+            <span class="card-date">${fmtDate(p.duty_date)}</span>
+            <span class="card-meta" style="margin:0">${modeLabel}</span>
+          </div>
+          <div class="offers-section">
+            <strong style="font-size:15px">Offers</strong>
+            ${postOffers.length ? postOffers.map(o => {
+              const offerer = offererMap.get(o.from_id)
+              return `<div class="offer-row">
+                <div>
+                  <div>${esc(offerer?.full_name || 'Unknown')}</div>
+                  ${tagsHtml(offerer?.tags as { name: string }[] || [])}
+                  ${o.trade_date ? `<div style="font-size:14px;color:var(--muted)">Gives you back ${fmtDate(o.trade_date)}</div>` : ''}
+                </div>
+                <button class="btn-primary small" onclick="window._acceptOffer('${o.id}')">Accept</button>
+              </div>`
+            }).join('') : '<p style="color:var(--muted);font-size:14px;margin:6px 0 0">No offers yet.</p>'}
+          </div>
+          <div class="card-actions">
+            <button class="btn-link small" onclick="window._removePost('${p.id}')">Take down this post</button>
+          </div>
+        </div>
       </div>
-    </div>`
+    </article>`
   }).join('')
 }
 
 ;(window as any)._acceptOffer = async (offerId: string) => {
   const { error } = await supabase.rpc('accept_offer', { p_offer_id: offerId })
   if (error) {
-    const text = error.message.includes('already been swopped')
+    alert(error.message.includes('already been swopped')
       ? 'Someone else already swopped this day.'
-      : error.message
-    alert(text)
+      : error.message)
+  } else {
+    switchTab('myswops')
+    window.scrollTo(0, 0)
   }
-  loadMySwops()
 }
 
 // ── History ──
@@ -471,20 +549,17 @@ async function loadHistory(append = false) {
   if (!append) list.innerHTML = ''
 
   if (!events?.length) {
-    if (!append) list.innerHTML = '<p class="empty">No history yet.</p>'
+    if (!append) list.innerHTML = '<div class="empty">No history yet.</div>'
     hide($('#history-more'))
     return
   }
 
   list.innerHTML += events.map(ev =>
-    `<div class="event-row">${ev.summary} <small>${fmtTime(ev.created_at)}</small></div>`
+    `<li class="event-row">${esc(ev.summary)}<time>${fmtTime(ev.created_at)}</time></li>`
   ).join('')
 
-  if (events.length === 100) {
-    show($('#history-more'))
-  } else {
-    hide($('#history-more'))
-  }
+  if (events.length === 100) show($('#history-more'))
+  else hide($('#history-more'))
 }
 
 $('#history-more').addEventListener('click', () => {
@@ -501,11 +576,12 @@ async function loadInvites() {
     .order('created_at', { ascending: false })
 
   const list = $('#invite-list')
-  if (!invites?.length) { list.innerHTML = '<p class="empty">No invites yet.</p>'; return }
+  if (!invites?.length) { list.innerHTML = '<div class="empty">No invites sent yet.</div>'; return }
 
-  list.innerHTML = invites.map(inv =>
-    `<div class="event-row">${inv.email} - ${inv.accepted_at ? 'Accepted' : inv.expires_at < new Date().toISOString() ? 'Expired' : 'Pending'} <small>${fmtTime(inv.created_at)}</small></div>`
-  ).join('')
+  list.innerHTML = invites.map(inv => {
+    const status = inv.accepted_at ? 'Accepted' : inv.expires_at < new Date().toISOString() ? 'Expired' : 'Pending'
+    return `<div class="event-row">${esc(inv.email)} &mdash; ${status}<time>${fmtTime(inv.created_at)}</time></div>`
+  }).join('')
 }
 
 $('#invite-form').addEventListener('submit', async (e) => {
