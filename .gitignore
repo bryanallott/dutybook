@@ -26,3 +26,8 @@ dist-ssr
 *.sln
 *.sw?
 supabase/.temp/cli-latest
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
