@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a56db" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>Dutybook</title>
+</head>
+<body>
+  <div id="app">
+    <!-- Login screen -->
+    <div id="screen-login" class="screen">
+      <div class="login-box">
+        <h1>Dutybook</h1>
+        <p>Clifton duty swops</p>
+        <form id="login-form">
+          <input type="email" id="login-email" placeholder="Your email" required autocomplete="email" />
+          <button type="submit">Send magic link</button>
+        </form>
+        <p id="login-msg" class="msg" hidden></p>
+      </div>
+    </div>
+
+    <!-- Join screen (from invite) -->
+    <div id="screen-join" class="screen" hidden>
+      <div class="join-box">
+        <h1>Join the club</h1>
+        <form id="join-form">
+          <input type="text" id="join-name" placeholder="Your full name" required />
+          <fieldset id="join-tags">
+            <legend>Your qualifications</legend>
+          </fieldset>
+          <button type="submit">Join</button>
+        </form>
+        <p id="join-msg" class="msg" hidden></p>
+      </div>
+    </div>
+
+    <!-- Main app -->
+    <div id="screen-app" class="screen" hidden>
+      <nav id="tabs">
+        <button data-tab="open" class="active">Open days</button>
+        <button data-tab="post">Post</button>
+        <button data-tab="myswops">My swops <span id="notif-badge" class="badge" hidden></span></button>
+        <button data-tab="history">History</button>
+        <button data-tab="invite" id="tab-btn-invite" hidden>Invite</button>
+      </nav>
+
+      <main>
+        <section id="tab-open" class="tab-content">
+          <h2>Open days</h2>
+          <div id="open-list" class="card-list"></div>
+          <p id="open-empty" class="empty" hidden>No open days right now.</p>
+        </section>
+
+        <section id="tab-post" class="tab-content" hidden>
+          <h2>Post a day</h2>
+          <form id="post-form">
+            <label>Date <input type="date" id="post-date" required /></label>
+            <label>
+              <select id="post-mode">
+                <option value="give">Give away</option>
+                <option value="trade">Trade</option>
+              </select>
+            </label>
+            <button type="submit">Post</button>
+          </form>
+          <p id="post-msg" class="msg" hidden></p>
+        </section>
+
+        <section id="tab-myswops" class="tab-content" hidden>
+          <h2>My swops</h2>
+          <div id="my-notifications" class="notif-list"></div>
+          <h3>Active swops</h3>
+          <div id="my-swops-list" class="card-list"></div>
+          <h3>My open posts</h3>
+          <div id="my-posts-list" class="card-list"></div>
+        </section>
+
+        <section id="tab-history" class="tab-content" hidden>
+          <h2>History</h2>
+          <div id="history-list" class="event-list"></div>
+          <button id="history-more" hidden>Load more</button>
+        </section>
+
+        <section id="tab-invite" class="tab-content" hidden>
+          <h2>Invite a member</h2>
+          <form id="invite-form">
+            <input type="email" id="invite-email" placeholder="Email address" required />
+            <button type="submit">Send invite</button>
+          </form>
+          <p id="invite-msg" class="msg" hidden></p>
+          <h3>Invites sent</h3>
+          <div id="invite-list"></div>
+        </section>
+      </main>
+
+      <footer>
+        <button id="logout-btn">Log out</button>
+      </footer>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

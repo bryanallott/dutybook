@@ -1,0 +1,11 @@
+name = "dutybook-ping"
+main = "ping.js"
+compatibility_date = "2024-01-01"
+
+[triggers]
+crons = ["0 6 * * 1"]
+
+[vars]
+# Set these via `wrangler secret put`
+# SUPABASE_URL = ""
+# SUPABASE_ANON_KEY = ""
