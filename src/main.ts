@@ -601,7 +601,9 @@ async function loadInvites() {
 
   list.innerHTML = invites.map(inv => {
     const status = inv.accepted_at ? 'Accepted' : inv.expires_at < new Date().toISOString() ? 'Expired' : 'Pending'
-    return `<div class="event-row">${esc(inv.email)} &mdash; ${status}<time>${fmtTime(inv.created_at)}</time></div>`
+    const [local, domain] = inv.email.split('@')
+    const masked = local[0] + '***@' + domain
+    return `<div class="event-row">${esc(masked)} &mdash; ${status}<time>${fmtTime(inv.created_at)}</time></div>`
   }).join('')
 }
 
