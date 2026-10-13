@@ -81,19 +81,40 @@ function showScreen(name: 'login' | 'join' | 'app') {
 }
 
 // ── Login ──
+const DEV = import.meta.env.DEV
+const DEV_PASSWORD = 'dev-local-password-123'
+
 $('#login-form').addEventListener('submit', async (e) => {
   e.preventDefault()
   const email = ($('#login-email') as HTMLInputElement).value
   const btn = $('#login-form button') as HTMLButtonElement
-  btn.disabled = true
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin }
-  })
-  btn.disabled = false
   const msg = $('#login-msg')
-  if (error) showMsg(msg, error.message, 'error')
-  else showMsg(msg, 'Check your email for the magic link.', 'success')
+  btn.disabled = true
+
+  if (DEV) {
+    // Dev mode: try password sign-in first, then sign-up with password
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: DEV_PASSWORD })
+    if (!signInErr) { btn.disabled = false; return }
+
+    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password: DEV_PASSWORD })
+    btn.disabled = false
+    if (signUpErr) {
+      // User exists from OTP flow without a password — delete via SQL editor and retry
+      showMsg(msg, `${signUpErr.message}. If user was created via magic link, delete from auth.users in the SQL editor and retry.`, 'error')
+    } else if (signUpData.session) {
+      showMsg(msg, 'Signed up and logged in.', 'success')
+    } else {
+      showMsg(msg, 'Signed up. Check email or refresh.', 'success')
+    }
+  } else {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin }
+    })
+    btn.disabled = false
+    if (error) showMsg(msg, error.message, 'error')
+    else showMsg(msg, 'Check your email for the magic link.', 'success')
+  }
 })
 
 // ── Join ──
@@ -218,7 +239,7 @@ async function loadOpenDays() {
     const postOffers = offersByPost.get(p.id) || []
     const myOffer = postOffers.find(o => o.from_id === currentMember?.id)
     const isMine = p.giver_id === currentMember?.id
-    const modeLabel = p.mode === 'trade' ? 'Wants a day back' : 'Giving away'
+    const modeLabel = p.mode === 'give' ? 'Needs a swop' : 'Available'
     const modeClass = p.mode === 'trade' ? ' trade' : ''
 
     let actions = ''
@@ -491,7 +512,7 @@ async function loadMyPosts() {
 
   list.innerHTML = posts.map(p => {
     const postOffers = offersByPost.get(p.id) || []
-    const modeLabel = p.mode === 'trade' ? 'Wants a day back' : 'Giving away'
+    const modeLabel = p.mode === 'give' ? 'Needs a swop' : 'Available'
 
     return `<article class="card">
       <div class="day-card">

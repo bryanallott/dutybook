@@ -71,6 +71,7 @@ button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
 
 .screen { min-height: 100dvh; display: flex; flex-direction: column; }
+.screen[hidden] { display: none; }
 
 /* ── Header ── */
 header {

@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dutybook Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#E4ECEF;--card:#FFFFFF;--ink:#102330;--muted:#566B78;--line:#D3DDE2;
+  --sea:#0E2A3B;--seaInk:#F2F7F9;--seaMuted:#9FB6C2;
+  --red:#D3242B;--redInk:#FFFFFF;--yellow:#F5C518;--yellowInk:#1E1800;
+  --ok:#1E7F4F;--okBg:#E2F2E9;--warnBg:#FFF4CC;--warnInk:#4F3C00;--warnLine:#E8CF6A;
+  --field:#F4F8F9;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#08151C;--card:#10232D;--ink:#E6EFF2;--muted:#93A8B3;--line:#22404E;
+    --sea:#041016;--seaInk:#E6EFF2;--seaMuted:#7F98A5;
+    --ok:#6CCB97;--okBg:#123022;--warnBg:#332A08;--warnInk:#F5DE8A;--warnLine:#6B5714;
+    --field:#0B1B23;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#08151C;--card:#10232D;--ink:#E6EFF2;--muted:#93A8B3;--line:#22404E;
+  --sea:#041016;--seaInk:#E6EFF2;--seaMuted:#7F98A5;
+  --ok:#6CCB97;--okBg:#123022;--warnBg:#332A08;--warnInk:#F5DE8A;--warnLine:#6B5714;
+  --field:#0B1B23;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif;font-weight:700;margin:0;line-height:1.1}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+header{background:var(--sea);color:var(--seaInk);padding:14px 16px 12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:22px;height:22px;border-radius:3px;background:linear-gradient(var(--red) 50%,var(--yellow) 50%);flex:none}
+.brand h1{font-size:26px;letter-spacing:.2px}
+.brand h1 span{font-weight:600;color:var(--seaMuted)}
+.who{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:var(--seaMuted)}
+.who select{flex:1;min-width:0;background:rgba(255,255,255,.08);color:var(--seaInk);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 8px}
+.who select option{color:#102330;background:#fff}
+.proto-note{font-size:12.5px;color:var(--seaMuted);margin:6px 0 0}
+
+main{flex:1;padding:16px 14px 110px}
+.section-title{font-size:21px;margin:22px 2px 10px}
+.section-title:first-child{margin-top:4px}
+.lede{color:var(--muted);margin:-4px 2px 14px;font-size:15px}
+
+.filters{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;margin:0 -14px 4px;padding-left:14px;padding-right:14px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:14px;white-space:nowrap;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--sea);color:var(--seaInk);border-color:var(--sea)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.tag{font-size:12.5px;padding:2px 8px;border-radius:999px;background:var(--field);border:1px solid var(--line);color:var(--muted)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.day{display:grid;grid-template-columns:54px 1fr;gap:14px}
+.flag{border-radius:6px;overflow:hidden;text-align:center;align-self:start;font-family:"Barlow Condensed","Arial Narrow",sans-serif}
+.flag .mo{display:block;background:var(--red);color:var(--redInk);font-size:14px;font-weight:600;padding:3px 0 2px}
+.flag .dn{display:block;background:var(--yellow);color:var(--yellowInk);font-size:26px;font-weight:700;padding:2px 0 3px;line-height:1.1}
+.day .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.day .place{font-weight:600;font-size:17px}
+.mode{font-size:13px;color:var(--muted);white-space:nowrap}
+.mode.trade{color:var(--red);font-weight:600}
+.when{color:var(--muted);font-size:15px}
+.giver{margin-top:8px;font-size:15px}
+.mine-pill{display:inline-block;font-size:12.5px;background:var(--sea);color:var(--seaInk);border-radius:999px;padding:1px 9px;margin-left:6px;vertical-align:2px}
+
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{border:0;border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:15px}
+.btn.primary{background:var(--red);color:var(--redInk)}
+.btn.dark{background:var(--sea);color:var(--seaInk)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.link{background:none;padding:9px 4px;color:var(--muted);text-decoration:underline;font-weight:500}
+.btn.wide{width:100%}
+.sent{font-size:14px;color:var(--ok);font-weight:600;align-self:center}
+
+.offers{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.offer{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 0}
+.offer + .offer{border-top:1px dashed var(--line)}
+.offer .back{font-size:14px;color:var(--muted)}
+.none{color:var(--muted);font-size:14px}
+
+form .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:14px;font-weight:500;margin-bottom:4px}
+.field{margin-bottom:12px}
+input[type=text],input[type=tel],input[type=date],input[type=time],select.in{width:100%;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:42px}
+.radio-row{display:flex;gap:8px}
+.radio-row label{flex:1;margin:0;border:1px solid var(--line);border-radius:8px;padding:10px;cursor:pointer;background:var(--field);font-weight:500}
+.radio-row input{margin-right:6px}
+.radio-row label:has(input:checked){border-color:var(--sea);box-shadow:inset 0 0 0 1px var(--sea)}
+.hint{font-size:13.5px;color:var(--muted);margin-top:4px}
+.err{color:var(--red);font-size:14px;font-weight:600;margin:0 0 10px}
+.inline-form{margin-top:12px;padding:12px;border-radius:10px;background:var(--field);border:1px solid var(--line)}
+.inline-form input,.inline-form select{background:var(--card)}
+
+.captain{background:var(--warnBg);border:1px solid var(--warnLine);color:var(--warnInk);border-radius:12px;padding:14px;margin-bottom:10px}
+.captain h3{font-size:19px;margin-bottom:4px}
+.captain p{margin:0 0 8px;font-size:15px}
+.msg{background:var(--card);color:var(--ink);border:1px solid var(--warnLine);border-radius:8px;padding:10px;font-size:14.5px;white-space:pre-wrap}
+.swop-meta{font-size:14.5px;margin-top:8px}
+.swop-meta a{color:inherit}
+.status-ok{color:var(--ok);font-weight:600}
+.status-wait{color:var(--muted)}
+.confirm-box{margin-top:12px;padding:10px;border-radius:8px;background:var(--field);border:1px solid var(--line);font-size:14.5px}
+
+.note{padding:10px 12px;border-left:4px solid var(--line);background:var(--card);border-radius:0 8px 8px 0;margin-bottom:6px;font-size:14.5px}
+.note.unread{border-left-color:var(--red)}
+.note time{display:block;font-size:12.5px;color:var(--muted)}
+.log{list-style:none;padding:0;margin:0}
+.log li{padding:10px 2px;border-bottom:1px solid var(--line);font-size:15px}
+.log time{display:block;font-size:12.5px;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:28px 16px;border:1px dashed var(--line);border-radius:12px}
+
+nav.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px);z-index:6}
+nav.tabs button{background:none;border:0;padding:11px 4px 12px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;position:relative;border-top:3px solid transparent}
+nav.tabs button[aria-current="page"]{color:var(--ink);border-top-color:var(--red)}
+.badge{display:inline-block;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11.5px;line-height:18px;padding:0 5px;margin-left:4px;vertical-align:1px}
+.flash{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom,0px));background:var(--sea);color:var(--seaInk);padding:10px 16px;border-radius:8px;font-size:14.5px;z-index:10;max-width:90%;text-align:center}
+@media (prefers-reduced-motion:no-preference){.flash{animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,6px)}}}
+.reset{margin-top:24px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="mark" aria-hidden="true"></div><h1>Dutybook <span>Marketplace</span></h1></div>
+    <p class="proto-note" style="margin-top:4px;font-size:14px">Clifton Lifesaving Club</p>
+    <div class="who"><label for="me" style="margin:0;font-weight:500">Viewing as</label><select id="me"></select></div>
+    <p class="proto-note">Prototype: switch person to play both sides of a swop.</p>
+  </header>
+  <main id="main"></main>
+  <nav class="tabs" id="tabs"></nav>
+</div>
+<div id="flash"></div>
+
+<script>
+(function(){
+const KEY='dutybook-proto-v3';
+const BASE_TAGS=["Surf Lifeguard","Pool Lifeguard","IRB Driver","IRB Crew","First Aid L1","First Aid L2","First Aid L3","Patrol Captain","Junior"];
+const BEACH='Clifton';
+const INVITE='DUTY-2026';
+const TODAY='2026-10-13';
+
+function seed(){
+  const t=Date.now();
+  return {
+    me:'m1',customTags:[],
+    members:[
+      {id:'m1',name:'Thandi Mokoena',phone:'082 555 0141',tags:['Surf Lifeguard','IRB Driver','First Aid L2']},
+      {id:'m2',name:'Pieter van Wyk',phone:'071 555 0198',tags:['Surf Lifeguard','First Aid L1']},
+      {id:'m3',name:'Aisha Davids',phone:'083 555 0172',tags:['Surf Lifeguard','IRB Crew','First Aid L3']},
+      {id:'m4',name:'Sipho Ndlovu',phone:'076 555 0123',tags:['Pool Lifeguard','Junior']},
+      {id:'m5',name:'Megan Fourie',phone:'084 555 0110',tags:['Surf Lifeguard','Patrol Captain','First Aid L2']}
+    ],
+    posts:[
+      {id:'p1',giverId:'m2',date:'2026-11-07',beach:'Clifton',mode:'give',status:'open',offers:[],createdAt:t-86400000*2},
+      {id:'p2',giverId:'m3',date:'2026-12-19',beach:'Clifton',mode:'trade',status:'open',createdAt:t-86400000,
+        offers:[{id:'o1',fromId:'m1',kind:'trade',status:'pending',tradeDay:{date:'2026-12-27',beach:'Clifton'}}]},
+      {id:'p3',giverId:'m5',date:'2026-12-24',beach:'Clifton',mode:'give',status:'open',offers:[],createdAt:t-3600000*5},
+      {id:'p4',giverId:'m1',date:'2026-11-14',beach:'Clifton',mode:'give',status:'confirmed',takerId:'m3',tradeDay:null,captainSent:false,confirmedAt:t-3600000*3,
+        offers:[{id:'o2',fromId:'m3',kind:'take',status:'accepted'}]}
+    ],
+    notes:[{id:'n1',to:'m1',text:'Aisha Davids offered to trade for her Sat 19 Dec shift at Clifton. Waiting on her to accept.',ts:t-3600000*20,read:false}],
+    log:[
+      {ts:t-3600000*3,text:'Thandi Mokoena gave Sat 14 Nov at Clifton to Aisha Davids.'},
+      {ts:t-3600000*5,text:'Megan Fourie posted Thu 24 Dec at Clifton.'},
+      {ts:t-86400000,text:'Aisha Davids posted Sat 19 Dec at Clifton, wants a day back.'},
+      {ts:t-86400000*2,text:'Pieter van Wyk posted Sat 7 Nov at Clifton.'}
+    ]
+  };
+}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}return seed();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+let S=load();
+const ui={tab:'feed',filter:null,offerFor:null,signup:false,cancelFor:null,err:null};
+
+const uid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mem=id=>S.members.find(x=>x.id===id)||{name:'Unknown',tags:[],phone:''};
+const first=id=>mem(id).name.split(' ')[0];
+const d=s=>new Date(s+'T00:00:00');
+const fmt=s=>d(s).toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'});
+const mon=s=>d(s).toLocaleDateString('en-ZA',{month:'short'});
+const dayNum=s=>d(s).getDate();
+const ago=ts=>{const m=Math.round((Date.now()-ts)/60000);if(m<1)return'just now';if(m<60)return m+' min ago';const h=Math.round(m/60);if(h<24)return h+' h ago';return Math.round(h/24)+' d ago';};
+const allTags=()=>BASE_TAGS.concat(S.customTags||[]);
+const shift=x=>fmt(x.date);
+
+function note(to,text){S.notes.push({id:uid(),to,text,ts:Date.now(),read:false});}
+function log(text){S.log.unshift({ts:Date.now(),text});}
+let flashT;
+function flash(msg){const f=document.getElementById('flash');f.innerHTML=`<div class="flash" role="status">${esc(msg)}</div>`;clearTimeout(flashT);flashT=setTimeout(()=>f.innerHTML='',2600);}
+
+function captainMsg(p){
+  const g=mem(p.giverId).name;
+  let t=`Swop confirmed: ${mem(p.takerId).name} is covering my ${fmt(p.date)} shift at ${p.beach}.`;
+  if(p.tradeDay)t+=` In return I'm covering their ${fmt(p.tradeDay.date)} shift at ${p.tradeDay.beach}.`;
+  return t+`\n– ${g}`;
+}
+function cancelMsg(p){
+  return `Heads up: the swop with ${p.cancelNotice.takerName} for my ${fmt(p.date)} shift at ${p.beach} is off. I'm back on that day.\n– ${mem(p.giverId).name}`;
+}
+
+/* ---------- actions ---------- */
+const A={
+  filter(el){ui.filter=ui.filter===el.dataset.tag?null:el.dataset.tag;render();},
+  take(el){const p=S.posts.find(x=>x.id===el.dataset.id);
+    p.offers.push({id:uid(),fromId:S.me,kind:'take',status:'pending'});
+    note(p.giverId,`${mem(S.me).name} offered to take your ${fmt(p.date)} shift at ${p.beach}.`);
+    log(`${mem(S.me).name} offered to take ${mem(p.giverId).name}'s ${fmt(p.date)} at ${p.beach}.`);
+    save();flash(`Offer sent. ${first(p.giverId)} accepts or not.`);render();},
+  openOffer(el){ui.offerFor=el.dataset.id;ui.err=null;render();const f=document.querySelector('#tradeForm input');if(f)f.focus();},
+  closeOffer(){ui.offerFor=null;ui.err=null;render();},
+  withdraw(el){const p=S.posts.find(x=>x.id===el.dataset.id);const o=p.offers.find(x=>x.fromId===S.me&&x.status==='pending');
+    if(o){o.status='withdrawn';log(`${mem(S.me).name} withdrew their offer for ${mem(p.giverId).name}'s ${fmt(p.date)}.`);}
+    save();flash('Offer withdrawn.');render();},
+  accept(el){const p=S.posts.find(x=>x.id===el.dataset.id);if(p.status!=='open'){flash('This day has already been swopped.');return;}
+    const o=p.offers.find(x=>x.id===el.dataset.offer);
+    p.status='confirmed';p.takerId=o.fromId;p.tradeDay=o.tradeDay||null;p.captainSent=false;p.confirmedAt=Date.now();p.cancelNotice=null;
+    o.status='accepted';
+    p.offers.forEach(x=>{if(x!==o&&x.status==='pending'){x.status='declined';note(x.fromId,`${mem(p.giverId).name} went with another offer for ${fmt(p.date)} at ${p.beach}.`);}});
+    note(o.fromId,`Swop confirmed. You're covering ${mem(p.giverId).name}'s ${shift(p)}.`+(p.tradeDay?` They're covering your ${fmt(p.tradeDay.date)}.`:''));
+    log(`${mem(p.giverId).name} ${p.tradeDay?'traded':'gave'} ${fmt(p.date)} at ${p.beach} ${p.tradeDay?'with':'to'} ${mem(o.fromId).name}.`);
+    save();ui.tab='mine';flash('Swop confirmed. Now let your captain know.');render();window.scrollTo(0,0);},
+  removePost(el){const p=S.posts.find(x=>x.id===el.dataset.id);p.status='removed';
+    p.offers.forEach(x=>{if(x.status==='pending')note(x.fromId,`${mem(p.giverId).name} took down their ${fmt(p.date)} post.`);});
+    log(`${mem(p.giverId).name} took down ${fmt(p.date)} at ${p.beach}.`);save();flash('Post removed.');render();},
+  askCancel(el){ui.cancelFor=el.dataset.id;render();},
+  keep(){ui.cancelFor=null;render();},
+  cancel(el){const p=S.posts.find(x=>x.id===el.dataset.id);const me=S.me;
+    const other=me===p.giverId?p.takerId:p.giverId;
+    note(other,`${mem(me).name} cancelled the swop for ${fmt(p.date)} at ${p.beach}. ${first(p.giverId)} is back on that shift.`);
+    log(`${mem(me).name} cancelled the ${fmt(p.date)} swop between ${mem(p.giverId).name} and ${mem(p.takerId).name}.`);
+    p.cancelNotice={takerName:mem(p.takerId).name,sent:false,ts:Date.now()};
+    p.status='open';p.takerId=null;p.tradeDay=null;p.captainSent=false;p.offers=[];ui.cancelFor=null;
+    save();flash(`Swop cancelled. ${me===p.giverId?'The day':first(p.giverId)+'\'s day'} is back on Open days.`);render();},
+  copy(el){const p=S.posts.find(x=>x.id===el.dataset.id);const txt=el.dataset.kind==='cancel'?cancelMsg(p):captainMsg(p);
+    const done=()=>flash('Message copied. Paste it to your captain.');
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));}else fallbackCopy(txt,done);},
+  told(el){const p=S.posts.find(x=>x.id===el.dataset.id);
+    if(el.dataset.kind==='cancel'){p.cancelNotice.sent=true;log(`${mem(p.giverId).name} told their captain the ${fmt(p.date)} swop is off.`);}
+    else{p.captainSent=true;log(`${mem(p.giverId).name} told their captain about the ${fmt(p.date)} swop.`);}
+    save();flash('Noted. Thanks.');render();},
+  tab(el){ui.tab=el.dataset.tab;ui.offerFor=null;ui.cancelFor=null;ui.err=null;render();window.scrollTo(0,0);},
+  closeSignup(){ui.signup=false;ui.err=null;render();},
+  toggleTag(el){el.setAttribute('aria-pressed',el.getAttribute('aria-pressed')==='true'?'false':'true');},
+  reset(){S=seed();save();ui.filter=null;ui.tab='feed';flash('Demo data reset.');render();}
+};
+function fallbackCopy(txt,done){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){flash('Select the message and copy it yourself.');}ta.remove();}
+
+document.addEventListener('click',e=>{const el=e.target.closest('[data-action]');if(!el)return;const fn=A[el.dataset.action];if(fn){e.preventDefault();fn(el);}});
+document.addEventListener('submit',e=>{
+  e.preventDefault();const f=e.target;const v=n=>(f.elements[n]&&f.elements[n].value||'').trim();
+  if(f.id==='postForm'){
+    if(!v('date')){ui.err='Pick the date of your duty.';return render();}
+    if(v('date')<TODAY){ui.err='That date has passed. Pick an upcoming duty day.';return render();}
+    const p={id:uid(),giverId:S.me,date:v('date'),beach:v('beach'),mode:f.elements.mode.value,status:'open',offers:[],createdAt:Date.now()};
+    S.posts.push(p);log(`${mem(S.me).name} posted ${fmt(p.date)} at ${p.beach}${p.mode==='trade'?', wants a day back':''}.`);
+    save();ui.err=null;ui.tab='feed';flash('Day posted. It\'s on Open days now.');render();window.scrollTo(0,0);
+  }
+  if(f.id==='tradeForm'){
+    const p=S.posts.find(x=>x.id===ui.offerFor);
+    if(!v('date')||v('date')<TODAY){ui.err='Pick an upcoming day you can give back.';return render();}
+    if(v('date')===p.date){ui.err='That\'s the same day. Offer a different one.';return render();}
+    const td={date:v('date'),beach:v('beach')};
+    p.offers.push({id:uid(),fromId:S.me,kind:'trade',status:'pending',tradeDay:td});
+    note(p.giverId,`${mem(S.me).name} offered to trade for your ${fmt(p.date)}. They'd give you ${shift(td)}.`);
+    log(`${mem(S.me).name} offered ${fmt(td.date)} in trade for ${mem(p.giverId).name}'s ${fmt(p.date)}.`);
+    ui.offerFor=null;ui.err=null;save();flash(`Trade offered. ${first(p.giverId)} accepts or not.`);render();
+  }
+  if(f.id==='signupForm'){
+    const tags=[...f.querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag);
+    const other=v('other');
+    if(!v('name')){ui.err='Add your full name so people know who they\'re swopping with.';return render(true);}
+    if(!v('phone')){ui.err='Add a phone number. It\'s only shown after a swop is confirmed.';return render(true);}
+    if(v('code').toUpperCase()!==INVITE){ui.err='That invite code doesn\'t match your club. Ask your club admin for the current one.';return render(true);}
+    if(other){if(!allTags().includes(other))S.customTags.push(other);tags.push(other);}
+    if(!tags.length){ui.err='Pick at least one tag so others can see what you\'re qualified for.';return render(true);}
+    const m={id:uid(),name:v('name'),phone:v('phone'),tags};S.members.push(m);S.me=m.id;
+    log(`${m.name} joined the club.`);save();ui.signup=false;ui.err=null;ui.tab='feed';flash(`Welcome, ${m.name.split(' ')[0]}.`);render();
+  }
+});
+document.getElementById('me').addEventListener('change',e=>{
+  if(e.target.value==='__new'){ui.signup=true;ui.err=null;render();return;}
+  S.me=e.target.value;ui.signup=false;ui.offerFor=null;ui.cancelFor=null;ui.err=null;save();render();window.scrollTo(0,0);
+});
+
+/* ---------- views ---------- */
+const tagsHtml=t=>`<div class="tags">${t.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`;
+const errHtml=()=>ui.err?`<p class="err" role="alert">${esc(ui.err)}</p>`:'';
+
+function card(p){
+  const g=mem(p.giverId),mine=p.giverId===S.me;
+  let actions='';
+  if(mine){
+    const pend=p.offers.filter(o=>o.status==='pending');
+    actions=`<div class="offers"><strong style="font-size:15px">Offers</strong>`+
+      (pend.length?pend.map(o=>`<div class="offer"><div><div>${esc(mem(o.fromId).name)}</div>${tagsHtml(mem(o.fromId).tags)}${o.tradeDay?`<div class="back">Gives you back ${esc(shift(o.tradeDay))}</div>`:''}</div><button class="btn primary" data-action="accept" data-id="${p.id}" data-offer="${o.id}">Accept</button></div>`).join('')
+        :`<p class="none" style="margin:6px 0 0">No offers yet.</p>`)+
+      `<div class="actions"><button class="btn link" data-action="removePost" data-id="${p.id}">Take down this post</button></div></div>`;
+  } else {
+    const myOffer=p.offers.find(o=>o.fromId===S.me&&o.status==='pending');
+    if(myOffer){actions=`<div class="actions"><span class="sent">Offer sent</span><button class="btn link" data-action="withdraw" data-id="${p.id}">Withdraw</button></div>`;}
+    else if(p.mode==='give'){actions=`<div class="actions"><button class="btn primary" data-action="take" data-id="${p.id}">Take this day</button></div>`;}
+    else if(ui.offerFor===p.id){
+      actions=`<form id="tradeForm" class="inline-form" novalidate><strong style="display:block;margin-bottom:8px">Which day can you give back?</strong>${errHtml()}
+        <div class="field"><label for="td-date">Your duty date</label><input id="td-date" type="date" name="date" min="${TODAY}"></div>
+        <input type="hidden" name="beach" value="${BEACH}">
+        <div class="actions" style="margin-top:0"><button class="btn primary" type="submit">Send trade offer</button><button class="btn ghost" type="button" data-action="closeOffer">Cancel</button></div></form>`;
+    } else {actions=`<div class="actions"><button class="btn primary" data-action="openOffer" data-id="${p.id}">Offer a day back</button></div>`;}
+  }
+  return `<article class="card day">
+    <div class="flag" aria-hidden="true"><span class="mo">${mon(p.date)}</span><span class="dn">${dayNum(p.date)}</span></div>
+    <div>
+      <div class="top"><span class="place">${fmt(p.date)}</span><span class="mode ${p.mode}">${p.mode==='trade'?'Wants a day back':'Giving away'}</span></div>
+      <div class="giver">${esc(g.name)}${mine?'<span class="mine-pill">Yours</span>':''}</div>
+      ${tagsHtml(g.tags)}
+      ${actions}
+    </div></article>`;
+}
+
+function feed(){
+  const open=S.posts.filter(p=>p.status==='open').sort((a,b)=>a.date.localeCompare(b.date));
+  const used=[...new Set(open.flatMap(p=>mem(p.giverId).tags))];
+  const list=ui.filter?open.filter(p=>mem(p.giverId).tags.includes(ui.filter)):open;
+  return `<h2 class="section-title">Open days</h2>
+  <p class="lede">Soonest first. Tags show what the person going off duty is qualified for, so you can judge if you're a fit.</p>
+  ${used.length?`<div class="filters" role="group" aria-label="Filter by tag">${used.map(t=>`<button class="chip" data-action="filter" data-tag="${esc(t)}" aria-pressed="${ui.filter===t}">${esc(t)}</button>`).join('')}</div>`:''}
+  ${list.length?list.map(card).join(''):`<div class="empty">${ui.filter?`No open days from anyone tagged ${esc(ui.filter)}. Clear the filter to see everything.`:'No open days right now. If you can\'t make a duty, post it.'}</div>`}`;
+}
+
+function post(){
+  return `<h2 class="section-title">Post a day</h2>
+  <p class="lede">Can't make a duty? Put it up. Nothing changes until you accept an offer.</p>
+  <form id="postForm" class="card" novalidate>${errHtml()}
+    <div class="field"><label for="p-date">Duty date</label><input id="p-date" type="date" name="date" min="${TODAY}"></div>
+    <input type="hidden" name="beach" value="${BEACH}">
+    <div class="field"><span style="display:block;font-size:14px;font-weight:500;margin-bottom:4px">What do you want?</span>
+      <div class="radio-row"><label><input type="radio" name="mode" value="give" checked>Give it away</label><label><input type="radio" name="mode" value="trade">A day back</label></div></div>
+    <button class="btn primary wide" type="submit">Post this day</button>
+  </form>`;
+}
+
+function captainCard(p,kind){
+  const txt=kind==='cancel'?cancelMsg(p):captainMsg(p);
+  return `<div class="captain"><h3>${kind==='cancel'?'Tell your captain the swop is off':'Tell your captain'}</h3>
+    <p>${kind==='cancel'?`The ${fmt(p.date)} swop was cancelled, so you're back on.`:'It was your duty, so this one\'s on you. Here\'s a message ready to go.'}</p>
+    <div class="msg">${esc(txt)}</div>
+    <div class="actions"><a class="btn dark" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">Send on WhatsApp</a>
+    <button class="btn ghost" data-action="copy" data-id="${p.id}" data-kind="${kind}">Copy message</button>
+    <button class="btn link" data-action="told" data-id="${p.id}" data-kind="${kind}">I've told my captain</button></div></div>`;
+}
+
+function mine(){
+  const me=S.me;let h='';
+  const notes=S.notes.filter(n=>n.to===me).sort((a,b)=>b.ts-a.ts).slice(0,6);
+  const tell=S.posts.filter(p=>p.giverId===me&&p.status==='confirmed'&&!p.captainSent);
+  const tellCancel=S.posts.filter(p=>p.giverId===me&&p.cancelNotice&&!p.cancelNotice.sent&&p.status!=='confirmed');
+  const conf=S.posts.filter(p=>p.status==='confirmed'&&(p.giverId===me||p.takerId===me)).sort((a,b)=>a.date.localeCompare(b.date));
+  const openMine=S.posts.filter(p=>p.status==='open'&&p.giverId===me).sort((a,b)=>a.date.localeCompare(b.date));
+  const myOffers=S.posts.filter(p=>p.status==='open'&&p.offers.some(o=>o.fromId===me&&o.status==='pending'));
+
+  if(tell.length||tellCancel.length)h+=tell.map(p=>captainCard(p,'confirm')).join('')+tellCancel.map(p=>captainCard(p,'cancel')).join('');
+  if(notes.length)h+=`<h2 class="section-title">Updates</h2>`+notes.map(n=>`<div class="note${n.read?'':' unread'}">${esc(n.text)}<time>${ago(n.ts)}</time></div>`).join('');
+
+  h+=`<h2 class="section-title">Confirmed swops</h2>`;
+  h+=conf.length?conf.map(p=>{
+    const giving=p.giverId===me,other=giving?p.takerId:p.giverId,o=mem(other);
+    const line=giving?`${esc(o.name)} is covering your shift.`:`You're covering ${esc(o.name)}'s shift.`;
+    const back=p.tradeDay?`<div class="swop-meta">${giving?'You cover':`${esc(first(other))} covers`} ${esc(shift(p.tradeDay))} in return.</div>`:'';
+    const status=giving?(p.captainSent?'<span class="status-ok">Captain told</span>':'<span class="status-wait">Captain not told yet</span>'):(p.captainSent?`<span class="status-ok">${esc(first(other))} told their captain</span>`:`<span class="status-wait">${esc(first(other))} still needs to tell their captain</span>`);
+    const conf=ui.cancelFor===p.id?`<div class="confirm-box">Cancel this swop? ${esc(first(other))} gets told straight away and ${giving?'you\'re':esc(first(p.giverId))+' is'} back on duty.<div class="actions"><button class="btn primary" data-action="cancel" data-id="${p.id}">Cancel swop</button><button class="btn ghost" data-action="keep">Keep it</button></div></div>`
+      :`<div class="actions"><button class="btn link" data-action="askCancel" data-id="${p.id}">Cancel swop</button></div>`;
+    return `<article class="card day"><div class="flag" aria-hidden="true"><span class="mo">${mon(p.date)}</span><span class="dn">${dayNum(p.date)}</span></div><div>
+      <div class="top"><span class="place">${fmt(p.date)}</span></div>
+      <div class="swop-meta">${line}</div>${back}
+      <div class="swop-meta">${esc(o.name)}: <a href="tel:${esc(o.phone.replace(/\s/g,''))}">${esc(o.phone)}</a></div>
+      <div class="swop-meta">${status}</div>${conf}</div></article>`;
+  }).join(''):`<div class="empty">No confirmed swops yet.</div>`;
+
+  if(openMine.length)h+=`<h2 class="section-title">Your open days</h2>`+openMine.map(card).join('');
+  if(myOffers.length)h+=`<h2 class="section-title">Offers you've made</h2>`+myOffers.map(card).join('');
+  return h;
+}
+
+function history(){
+  return `<h2 class="section-title">History</h2><p class="lede">Every post, offer, swop and cancellation, newest first. If there's ever a question about who agreed to what, it's here.</p>
+  <ul class="log">${S.log.map(l=>`<li>${esc(l.text)}<time>${new Date(l.ts).toLocaleString('en-ZA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</time></li>`).join('')}</ul>
+  <div class="reset"><button class="btn ghost" data-action="reset">Reset demo data</button></div>`;
+}
+
+function signup(){
+  const v=id=>{const el=document.getElementById(id);return el?esc(el.value):'';};
+  return `<h2 class="section-title">Join your club</h2>
+  <p class="lede">Your tags tell others what you're qualified for. Nobody checks them in the app, so keep them honest and current.</p>
+  <form id="signupForm" class="card" novalidate>${errHtml()}
+    <div class="field"><label for="s-name">Full name</label><input id="s-name" type="text" name="name" autocomplete="name" value="${v('s-name')}"></div>
+    <div class="field"><label for="s-phone">Phone</label><input id="s-phone" type="tel" name="phone" autocomplete="tel" value="${v('s-phone')}"><div class="hint">Only shown to the other person once a swop is confirmed.</div></div>
+    <div class="field"><label for="s-code">Club invite code</label><input id="s-code" type="text" name="code" autocomplete="off" value="${v('s-code')}"><div class="hint">Get it from your club admin. For this demo it's ${INVITE}.</div></div>
+    <div class="field"><span style="display:block;font-size:14px;font-weight:500;margin-bottom:6px">Your qualifications</span>
+      <div class="tags" role="group" aria-label="Qualification tags">${allTags().map(t=>`<button type="button" class="chip" data-action="toggleTag" data-tag="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join('')}</div></div>
+    <div class="field"><label for="s-other">Something not on the list?</label><input id="s-other" type="text" name="other" placeholder="e.g. Rescue Swimmer" value="${v('s-other')}"></div>
+    <div class="actions"><button class="btn primary" type="submit">Join club</button><button class="btn ghost" type="button" data-action="closeSignup">Cancel</button></div>
+  </form>`;
+}
+
+function render(keepSignup){
+  // remember pressed tags in signup across error re-renders
+  const pressed=keepSignup?[...document.querySelectorAll('#signupForm .chip[aria-pressed="true"]')].map(b=>b.dataset.tag):[];
+  const sel=document.getElementById('me');
+  sel.innerHTML=S.members.map(m=>`<option value="${m.id}"${m.id===S.me&&!ui.signup?' selected':''}>${esc(m.name)}</option>`).join('')+`<option value="__new"${ui.signup?' selected':''}>Sign up a new member…</option>`;
+  const main=document.getElementById('main');const tabs=document.getElementById('tabs');
+  if(ui.signup){main.innerHTML=signup();tabs.style.display='none';
+    pressed.forEach(t=>{const b=document.querySelector(`#signupForm .chip[data-tag="${CSS.escape(t)}"]`);if(b)b.setAttribute('aria-pressed','true');});return;}
+  tabs.style.display='';
+  main.innerHTML=ui.tab==='feed'?feed():ui.tab==='post'?post():ui.tab==='mine'?mine():history();
+  const unread=S.notes.filter(n=>n.to===S.me&&!n.read).length+S.posts.filter(p=>p.giverId===S.me&&((p.status==='confirmed'&&!p.captainSent)||(p.cancelNotice&&!p.cancelNotice.sent&&p.status!=='confirmed'))).length;
+  const T=[['feed','Open days'],['post','Post'],['mine','My swops'],['history','History']];
+  tabs.innerHTML=T.map(([k,l])=>`<button data-action="tab" data-tab="${k}"${ui.tab===k?' aria-current="page"':''}>${l}${k==='mine'&&unread?`<span class="badge">${unread}</span>`:''}</button>`).join('');
+  if(ui.tab==='mine'){let ch=false;S.notes.forEach(n=>{if(n.to===S.me&&!n.read){n.read=true;ch=true;}});if(ch)save();}
+}
+render();
+})();
+</script>
+</body>
+</html>
